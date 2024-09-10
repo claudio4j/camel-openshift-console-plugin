@@ -1,0 +1,35 @@
+[
+ {
+    "type": "console.flag/hookProvider",
+    "properties": {
+      "handler": { "$codeRef": "actions.enableCamelPlugin" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": ["/camel/ns/:ns", "/camel/all-namespaces"],
+      "component": { "$codeRef": "HomePage" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/camel/application/:ns/:kind/:name",
+      "component": { "$codeRef": "ApplicationPage" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "Home",
+      "name": "%camel-plugin~Camel%",
+      "href": "/camel",
+      "perspective": "dev",
+      "section": "resources",
+      "namespaced": true
+    }
+  }
+]

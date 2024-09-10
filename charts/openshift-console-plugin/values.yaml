@@ -1,0 +1,68 @@
+---
+plugin:
+  name: ""
+  description: ""
+  image: "quay.io/cmiranda/camel-openshift-console-plugin:latest"
+  imagePullPolicy: Always
+  replicas: 1
+  port: 9443
+  securityContext:
+    enabled: true
+  podSecurityContext:
+    enabled: true
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 10m
+      memory: 50Mi
+  basePath: /
+  certificateSecretName: ""
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  patcherServiceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  jobs:
+    patchConsoles:
+      enabled: true
+      image: "registry.redhat.io/openshift4/ose-tools-rhel8@sha256:e44074f21e0cca6464e50cb6ff934747e0bd11162ea01d522433a1a1ae116103"
+      podSecurityContext:
+        enabled: true
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containerSecurityContext:
+        enabled: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 10m
+          memory: 50Mi
+serviceProxy:
+  alias: "service-proxy"
+  name: "service-proxy"
+  namespace: "plugin-camel-openshift-console-plugin"
+  envs:
+    JAVA_APP_JAR: /deployments/quarkus-run.jar
+  image: cmiranda/service-proxy:1.0.0-SNAPSHOT
+  openjdk17:
+    builderImage: registry.access.redhat.com/ubi8/openjdk-17
+  ports:
+    http: 8080
+    https: 8443
+  s2iJava:
+    builderImage: fabric8/s2i-java

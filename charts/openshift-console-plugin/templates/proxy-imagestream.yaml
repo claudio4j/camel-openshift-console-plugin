@@ -1,0 +1,29 @@
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app.kubernetes.io/name: service-proxy
+    app.kubernetes.io/version: 1.0.0-SNAPSHOT
+  name: openjdk-17
+spec:
+  dockerImageRepository: {{ .Values.serviceProxy.openjdk17.builderImage }}
+  lookupPolicy:
+    local: true
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.camel.io/commit-id: 74a2c93990b7f5eaa00f4d82b03c83da11b0414d
+    app.camel.io/build-timestamp: 2023-11-29 - 20:24:40 +0000
+  labels:
+    app.kubernetes.io/name: service-proxy
+    app.kubernetes.io/version: 1.0.0-SNAPSHOT
+    app.kubernetes.io/managed-by: camel
+    app.openshift.io/runtime: camel
+  name: service-proxy
+spec:
+  lookupPolicy:
+    local: true

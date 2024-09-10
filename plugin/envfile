@@ -1,0 +1,11 @@
+BRIDGE_K8S_AUTH=bearer-token
+BRIDGE_K8S_AUTH_BEARER_TOKEN=sha256~skC3A7XeZ3PvoRPVY4nlBgE6jTCSuGVbwrm6nTz7bhE
+BRIDGE_K8S_MODE=off-cluster
+BRIDGE_K8S_MODE_OFF_CLUSTER_ALERTMANAGER=https://alertmanager-main-openshift-monitoring.apps.qshift.snowdrop.dev
+BRIDGE_K8S_MODE_OFF_CLUSTER_ENDPOINT=https://api.qshift.snowdrop.dev:6443
+BRIDGE_K8S_MODE_OFF_CLUSTER_SKIP_VERIFY_TLS=true
+BRIDGE_K8S_MODE_OFF_CLUSTER_THANOS=https://thanos-querier-openshift-monitoring.apps.qshift.snowdrop.dev
+BRIDGE_PLUGINS=camel-openshift-console-plugin=http://host.docker.internal:9001
+BRIDGE_USER_AUTH=disabled
+BRIDGE_USER_SETTINGS_LOCATION=localstorage
+npm_package_scripts_test_cypress_headless='cd integration-tests && node --max-old-space-size=4096 ../node_modules/.bin/cypress run --env openshift=true --browser ${BRIDGE_E2E_BROWSER_NAME:=chrome}'

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": "src",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "target": "es2020",
+    "jsx": "react",
+    "allowJs": true,
+    "strict": false,
+    "noUnusedLocals": true,
+    "sourceMap": true,
+    "paths": {
+      "@openshift-console/dynamic-plugin-sdk/*": ["../node_modules/@openshift-console/dynamic-plugin-sdk/*"]
+    },
+  },
+  "include": ["src"]
+}

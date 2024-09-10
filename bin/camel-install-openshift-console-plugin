@@ -1,0 +1,45 @@
+#!/bin/bash
+TOKEN=""
+SERVER=""
+IMAGE="quay.io/cmiranda/camel-openshift-console-plugin:latest"
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --token)
+      TOKEN="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --server)
+      SERVER_URL="$2"
+      shift # past argument
+      shift # past value
+      ;;
+    --token=*)
+      TOKEN=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift # past argument
+      ;;
+    --server=*)
+      SERVER=`echo $1 | sed -e 's/^[^=]*=//g'`
+      shift # past argument
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      POSITIONAL_ARGS+=("$1") # save positional arg
+      shift # past argument
+      ;;
+  esac
+done
+
+if [ -n "$TOKEN" ] && [ -n "$SERVER" ]; then
+  echo "Login to server: $SERVER using token: $TOKEN."
+  oc login --token=$TOKEN --server=$SERVER
+fi
+
+EXISTING_PROJECT=`oc get projects | grep plugin-camel-openshift-console-plugin`
+if [ -z "$EXISTING_PROJECT" ]; then
+  oc new-project plugin-camel-openshift-console-plugin
+fi
+helm upgrade -i camel-openshift-console-plugin charts/openshift-console-plugin --namespace plugin-camel-openshift-console-plugin --set plugin.image=quay.io/cmiranda/camel-openshift-console-plugin:latest

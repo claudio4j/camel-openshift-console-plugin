@@ -1,0 +1,17 @@
+/* Prefixing your CSS classes with your plugin name is a best practice to avoid
+ * collisions with other plugin styles. */
+.console-plugin-template__nice {
+  /* Use PF global vars for colors to support dark mode in OpenShift 4.11.
+   * https://patternfly-react-main.surge.sh/developer-resources/global-css-variables */
+  color: var(--pf-global--palette--blue-400);
+}
+
+.monospace {
+  font-family: 'DejaVu Sans Mono', monospace;
+}
+
+/* Define a CSS class for the angled lines */
+.mock {
+  background: linear-gradient(45deg, #ccc 15%, transparent 25%, transparent 50%, #ccc 50%, #ccc 75%, transparent 75%, transparent);
+  background-size: 5px 5px; /* Adjust the size of the lines */
+}

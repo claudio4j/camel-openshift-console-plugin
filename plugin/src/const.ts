@@ -1,0 +1,1 @@
+export const FLAG_OPENSHIFT_CAMEL = 'OPENSHIFT_CAMEL';

@@ -186,7 +186,7 @@ function convertGitUrlToHttp(gitUrl: string): string {
   useEffect(() => {
    switch (framework) {
       case "camel":
-        setFrameworkUrl("https://quarkus.io/");
+        setFrameworkUrl("https://camel.apache.org/");
       break;
       default:
        setFrameworkUrl("");

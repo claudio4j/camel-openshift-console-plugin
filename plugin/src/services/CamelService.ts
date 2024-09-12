@@ -4,7 +4,7 @@ import { Application, deploymentConfigToApplication, deploymentToApplication } f
 import { sprintf } from 'sprintf-js';
 import { camelApplicationStore } from '../state';
 
-const OPENSHIFT_RUNTIME = 'app.openshift.io/runtime';
+const OPENSHIFT_RUNTIME = 'app.openshift.io/integration-runtime';
 
 export async function fetchDeployments(ns: string): Promise<Application[]>  {
   let deploymentsUri = ns ? '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments' : '/api/kubernetes/apis/apps/v1/deployments';
@@ -17,7 +17,7 @@ export async function fetchDeployments(ns: string): Promise<Application[]>  {
 
 async function fetchDeployment(ns: string, name: string): Promise<Application>  {
   return consoleFetchJSON('/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name).then(res => {
-       if (res.metadata.labels?.['app.openshift.io/runtime'] === 'camel') {
+       if (res.metadata.labels?.['app.openshift.io/integration-runtime'] === 'camel') {
            return deploymentToApplication(res);
        }
        return null;
@@ -47,7 +47,7 @@ export async function fetchDeploymentConfigs(ns: string): Promise<Application[]>
 
 async function fetchDeploymentConfig(ns: string, name: string): Promise<Application>  {
   return consoleFetchJSON('/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/'+ name).then(res => {
-       if (res.metadata.labels?.['app.openshift.io/runtime'] === 'camel') {
+       if (res.metadata.labels?.['app.openshift.io/integration-runtime'] === 'camel') {
            return deploymentConfigToApplication(res);
        }
        return null;

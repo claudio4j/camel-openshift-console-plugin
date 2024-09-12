@@ -60,7 +60,7 @@ const ApplicationLoggingCard: React.FC<{application: Application, active?: boole
     setInputValue('');
   };
 
-  const handleInputChange = (event: React.FormEvent<HTMLInputElement>, value: string) => {
+  const handleInputChange = (value: string, event: React.FormEvent<HTMLInputElement>) => {
     //get text from event and set it to inputValue
     if (event && event.currentTarget && event.currentTarget.value) {
       setInputValue(event.currentTarget.value);

@@ -4,8 +4,7 @@ import { Link } from 'react-router-dom';
 import { Table, Thead, Tr, Th, Td, Tbody } from '@patternfly/react-table';
 import { Application } from "../types";
 import Status from "@openshift-console/dynamic-plugin-sdk/lib/app/components/status/Status";
-import { Button, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
-import { Dropdown, DropdownItem, DropdownToggle } from "@patternfly/react-core/deprecated";
+import { Button, Dropdown, DropdownItem, DropdownToggle, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
 import { EllipsisVIcon, FilterIcon, SearchIcon, TimesIcon } from "@patternfly/react-icons";
 import { deleteApplication, deleteApplicationPods } from "../services/CamelService";
 interface ApplicationListProps {

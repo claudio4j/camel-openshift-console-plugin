@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom';
 import { Table, Thead, Tr, Th, Td, Tbody } from '@patternfly/react-table';
 import { Application } from "../types";
 import Status from "@openshift-console/dynamic-plugin-sdk/lib/app/components/status/Status";
-import { Button, Dropdown, DropdownItem, DropdownToggle, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
-import { EllipsisVIcon, FilterIcon, SearchIcon, TimesIcon } from "@patternfly/react-icons";
-import { deleteApplication, deleteApplicationPods } from "../services/CamelService";
+import { Button, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
+import { FilterIcon, SearchIcon, TimesIcon } from "@patternfly/react-icons";
+
+const CAMEL_INFO = 'app.openshift.io/integration-runtime-info'
+
 interface ApplicationListProps {
   apps: Application[];
 }
@@ -17,7 +19,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
     kind: 'Kind',
     namespace: 'Namespace',
     status: 'Status',
-    created: 'Created',
+    runtime: 'Runtime',
     cpu: 'CPU',
     memory: 'Memory',
   };
@@ -121,41 +123,6 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
     );
   }
 
-
-  //
-  // Actions dropdown
-  //
-  const actions = ["Undeploy", "Restart", "Restart in Debug mode"];
-  const [openStates, setOpenStates] = useState<boolean[]>(Array(apps.length).fill(false));
-  const [selectedActions, setSelectedActions] = useState<string[]>(Array(apps.length).fill("")); // Store selected actions for each row
-
-  // Functions to handle actions menu
-  const onToggleActions = (index: number) => {
-    const updatedOpenStates = [...openStates];
-    updatedOpenStates[index] = !updatedOpenStates[index];
-    setOpenStates(updatedOpenStates);
-  };
-
-
-  const onSelectAction = (action: string, index: number) => {
-    const updatedSelectedActions = [...selectedActions];
-    updatedSelectedActions[index] = action;
-    setSelectedActions(updatedSelectedActions);
-    setOpenStates(Array(apps.length).fill(false)); // Close all other rows
-    const app = apps[index];
-    switch (action) {
-      case "Undeploy":
-        console.log("Undeploying: " + app.metadata.name);
-        deleteApplication(app.kind, app.metadata.namespace, app.metadata.name);
-        break;
-      case "Restart":
-        console.log("Restarting: " + app.metadata.name);
-        deleteApplicationPods(app.metadata.namespace, app.metadata.name);
-        break;
-    }
-  };
-
-
   useEffect(() => {
     const sorted = [...apps].filter(filterWithSelection).sort((a, b) => {
     if (sortColumn === "name") {
@@ -182,10 +149,6 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
       const memoryA = parseFloat(a.memory);
       const memoryB = parseFloat(b.memory);
       return sortDirection === "asc" ? memoryA - memoryB : memoryB - memoryA;
-    } else if (sortColumn === "created") {
-      const timestampA = new Date(a.metadata.creationTimestamp).getTime();
-      const timestampB = new Date(b.metadata.creationTimestamp).getTime();
-      return sortDirection === "asc" ? timestampA - timestampB : timestampB - timestampA;
     }
     return 0;
   });
@@ -270,16 +233,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                   <span className="sort-icon">{sortDirection === "asc" ? "▲" : "▼"}</span>
                 )}
               </Th>
-              <Th
-                onClick={() => toggleSort("created")}
-                className={sortColumn === "created" ? `sorted ${sortDirection}` : ""}
-              >
-                {columnNames.created}
-                {sortColumn === "created" && (
-                  <span className="sort-icon">{sortDirection === "asc" ? "▲" : "▼"}</span>
-                )}
-              </Th>
-              <Th></Th>
+              <Th>{columnNames.runtime}</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -295,23 +249,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                 <Td dataLabel={columnNames.status}><Status title={`${app.status.availableReplicas} of ${app.status.replicas} pods`} status={app.status.availableReplicas === app.status.replicas ? "Succeeded" : "Failed"}/></Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
-                <Td dataLabel={columnNames.created}>{calculateTimeDifference(app.metadata.creationTimestamp)} ago</Td>
-                <Td dataLabel="Action">
-                  <div className="dropdown">
-                    <Dropdown
-                      onSelect={() => onSelectAction(selectedActions[index], index)}
-                      isOpen={openStates[index]}
-                      toggle={
-                        <DropdownToggle onToggle={() => onToggleActions(index)} aria-label="Action Menu">
-                            <EllipsisVIcon />
-                        </DropdownToggle>
-                      }
-                      dropdownItems={actions.map((action) => (
-                        <DropdownItem key={action} className="mock">{action}</DropdownItem>
-                      ))}
-                      />
-                  </div>
-                </Td>
+                <Td dataLabel={columnNames.runtime}>{extractRuntimeInfo(app.metadata.labels)}</Td>
               </Tr>
             ))}
           </Tbody>
@@ -322,23 +260,50 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
   );
 };
 
-function calculateTimeDifference(timestamp: string): string {
-  const currentTime = new Date();
-  const targetTime = new Date(timestamp);
+/*
+Labels with runtime information are set as:
+app.openshift.io/integration-runtime-info.1.name: Quarkus_Platform
+app.openshift.io/integration-runtime-info.1.value: 3.8.5.redhat-00003
 
-  // Calculate the time difference in milliseconds
-  const timeDifference = currentTime.getTime() - targetTime.getTime();
-
-  // Convert milliseconds to seconds, minutes, hours, and days
-  const seconds = Math.floor(timeDifference / 1000) % 60;
-  const minutes = Math.floor(timeDifference / (1000 * 60)) % 60;
-  const hours = Math.floor(timeDifference / (1000 * 60 * 60)) % 24;
-  const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-
-  // Create a human-readable string
-  const durationString = `${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds`;
-
-  return durationString;
+*/
+function extractRuntimeInfo(labels: []): string {
+    let info = "";
+    if (labels) {
+        // calculates how many labels starting with CAMEL_INFO
+        let length = 0;
+        for(let k in labels) {
+            let key = new String(k);
+            if (key.indexOf(CAMEL_INFO) > -1) {
+                length++;
+            }
+         }
+         // each key/pair uses two labels, so the total number of labels we want to use is half of it.
+         length = length/2;
+         for (let i = 1; i <= length; i++) {
+            let keyName = CAMEL_INFO + "." + i + ".name";
+            let keyValue = CAMEL_INFO + "." + i + ".value";
+            let name = labels[keyName];
+            // replace the underscore with space, since label value doesn't allow space.
+            name = name.replace('_', ' ')
+            let value = labels[keyValue];
+            // console.log("> " + name + ":" + value);
+            info += name + ":" + value + " - ";
+         }
+    }
+    return info;
 }
+
+/* function TextWithLineBreaks(props) {
+    let strtext = String(props);
+    const textWithBreaks = strtext.split('\n').map((text, index) => (
+        <React.Fragment key={index}>
+            {text}
+            <br />
+        </React.Fragment>
+    ));
+    console.log("> " + textWithBreaks);
+    return <div>{textWithBreaks}</div>;
+}
+ */
 
 export default ApplicationList;

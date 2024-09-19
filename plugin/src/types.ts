@@ -1,10 +1,9 @@
 import { K8sResourceCommon } from "@openshift-console/dynamic-plugin-sdk";
 import { DeploymentCondition, DeploymentKind, DeploymentConfigKind, PodSpec  } from "k8s-types";
 
-
 export type Snapshot = {
  name: string;
- x: string; 
+ x: string;
  y: number;
 }
 
@@ -76,3 +75,25 @@ export function deploymentConfigToApplication(deployment: DeploymentConfigKind):
     },
   };
 };
+
+/* export function cronjobToApplication(cronjob: CronJobKind): Application {
+    return {
+      kind: 'CronJob',
+      metadata: {
+        ...cronjob.metadata,
+      },
+      spec: {
+        ...cronjob.spec.jobTemplate.spec,
+      },
+      metrics: {
+        cpu: [],
+        memory: [],
+        gcPause: [],
+        gcOverhead: [],
+      },
+      status: {
+        ...cronjob.status,
+      },
+    };
+  };
+   */

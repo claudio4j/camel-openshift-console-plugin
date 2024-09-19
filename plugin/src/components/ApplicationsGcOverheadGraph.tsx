@@ -30,7 +30,7 @@ const ApplicationGcPauseGraph: React.FC<{applications: Application[] }> = ({ app
 
   return (
     <Card>
-      <CardTitle>Gc Overhead</CardTitle>
+      <CardTitle>JVM - GC Overhead</CardTitle>
       <CardBody>
         {data && legendData && legendData.length > 0 &&
         <Chart ariaTitle="Gc Overhead"

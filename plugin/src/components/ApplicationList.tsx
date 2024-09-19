@@ -7,8 +7,6 @@ import Status from "@openshift-console/dynamic-plugin-sdk/lib/app/components/sta
 import { Button, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon, TimesIcon } from "@patternfly/react-icons";
 
-const CAMEL_INFO = 'app.openshift.io/integration-runtime-info'
-
 interface ApplicationListProps {
   apps: Application[];
 }
@@ -249,7 +247,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                 <Td dataLabel={columnNames.status}><Status title={`${app.status.availableReplicas} of ${app.status.replicas} pods`} status={app.status.availableReplicas === app.status.replicas ? "Succeeded" : "Failed"}/></Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
-                <Td dataLabel={columnNames.runtime}>{extractRuntimeInfo(app.metadata.labels)}</Td>
+                <Td dataLabel={columnNames.runtime}>Quarkus Platform: {app.metadata.annotations['camel/quarkus-platform']}<br/>Camel: {app.metadata.annotations['camel/camel-core-version']}<br/>Camel Quarkus: {app.metadata.annotations['camel/camel-quarkus']}</Td>
               </Tr>
             ))}
           </Tbody>
@@ -259,51 +257,5 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
       </>
   );
 };
-
-/*
-Labels with runtime information are set as:
-app.openshift.io/integration-runtime-info.1.name: Quarkus_Platform
-app.openshift.io/integration-runtime-info.1.value: 3.8.5.redhat-00003
-
-*/
-function extractRuntimeInfo(labels: []): string {
-    let info = "";
-    if (labels) {
-        // calculates how many labels starting with CAMEL_INFO
-        let length = 0;
-        for(let k in labels) {
-            let key = new String(k);
-            if (key.indexOf(CAMEL_INFO) > -1) {
-                length++;
-            }
-         }
-         // each key/pair uses two labels, so the total number of labels we want to use is half of it.
-         length = length/2;
-         for (let i = 1; i <= length; i++) {
-            let keyName = CAMEL_INFO + "." + i + ".name";
-            let keyValue = CAMEL_INFO + "." + i + ".value";
-            let name = labels[keyName];
-            // replace the underscore with space, since label value doesn't allow space.
-            name = name.replace('_', ' ')
-            let value = labels[keyValue];
-            // console.log("> " + name + ":" + value);
-            info += name + ":" + value + " - ";
-         }
-    }
-    return info;
-}
-
-/* function TextWithLineBreaks(props) {
-    let strtext = String(props);
-    const textWithBreaks = strtext.split('\n').map((text, index) => (
-        <React.Fragment key={index}>
-            {text}
-            <br />
-        </React.Fragment>
-    ));
-    console.log("> " + textWithBreaks);
-    return <div>{textWithBreaks}</div>;
-}
- */
 
 export default ApplicationList;

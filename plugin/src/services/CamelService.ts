@@ -4,43 +4,41 @@ import { Application, deploymentConfigToApplication, deploymentToApplication } f
 import { sprintf } from 'sprintf-js';
 import { camelApplicationStore } from '../state';
 
-const OPENSHIFT_RUNTIME = 'app.openshift.io/integration-runtime';
-const PROMETHEUS_API_QUERY_PATH = '/api/prometheus-tenancy/api/v1/query';
-const PROMETHEUS_API_QUERYRANGE_PATH = '/api/prometheus-tenancy/api/v1/query_range';
+const OPENSHIFT_RUNTIME_LABEL = 'camel/integration-runtime=camel';
+const PROMETHEUS_API_QUERY_PATH = '/api/prometheus/api/v1/query';
+const PROMETHEUS_API_QUERYRANGE_PATH = '/api/prometheus/api/v1/query_range';
 
 export async function fetchDeployments(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments' : '/api/kubernetes/apis/apps/v1/deployments';
+    deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
-            .filter((d: DeploymentKind) => (d.metadata.labels && d.metadata.labels[OPENSHIFT_RUNTIME] && d.metadata.labels[OPENSHIFT_RUNTIME] === 'camel'))
             .map((d: DeploymentKind) => deploymentToApplication(d));
     });
 }
 
-async function fetchDeployment(ns: string, name: string): Promise<Application> {
-    return consoleFetchJSON('/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name).then(res => {
-        if (res.metadata.labels?.['app.openshift.io/integration-runtime'] === 'camel') {
-            return deploymentToApplication(res);
-        }
-        return null;
-    }).catch(_ => {
-        return null;
+/* export async function fetchCronjobs(ns: string): Promise<Application[]> {
+    let deploymentsUri = ns ? '/api/kubernetes/apis/batch/v1/namespaces/' + ns + '/cronjobs' : '/api/kubernetes/apis/batch/v1/cronjobs';
+    deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    return consoleFetchJSON(deploymentsUri).then(res => {
+        return res.items
+            .map((d: CronJobKind) => deploymentToApplication(d));
     });
 }
-
-async function deleteDeployment(ns: string, name: string): Promise<boolean> {
-    return consoleFetchJSON.delete('/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name).then(res => {
-        return true;
+ */
+async function fetchDeployment(ns: string, name: string): Promise<Application> {
+    return consoleFetchJSON('/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name).then(res => {
+        return deploymentToApplication(res);
     }).catch(_ => {
-        return false;
+        return null;
     });
 }
 
 export async function fetchDeploymentConfigs(ns: string): Promise<Application[]> {
     let deploymentConfigUri = ns ? '/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs' : '/api/kubernetes/apis/apps.openshift.io/v1/deploymentconfigs';
+    deploymentConfigUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
     return consoleFetchJSON(deploymentConfigUri).then(res => {
         return res.items
-            .filter((d: DeploymentConfigKind) => (d.metadata.labels && d.metadata.labels[OPENSHIFT_RUNTIME] && d.metadata.labels[OPENSHIFT_RUNTIME] === 'camel'))
             .map((d: DeploymentConfigKind) => deploymentConfigToApplication(d));
     }).catch(_ => {
         return null;
@@ -49,18 +47,7 @@ export async function fetchDeploymentConfigs(ns: string): Promise<Application[]>
 
 async function fetchDeploymentConfig(ns: string, name: string): Promise<Application> {
     return consoleFetchJSON('/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/' + name).then(res => {
-        if (res.metadata.labels?.['app.openshift.io/integration-runtime'] === 'camel') {
-            return deploymentConfigToApplication(res);
-        }
-        return null;
-    });
-}
-
-async function deleteDeploymentConfig(ns: string, name: string): Promise<boolean> {
-    return consoleFetchJSON('/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/' + name).then(res => {
-        return true;
-    }).catch(_ => {
-        return false;
+        return deploymentConfigToApplication(res);
     });
 }
 
@@ -111,7 +98,9 @@ export async function populateAdddionalInfo(app: Application): Promise<Applicati
 async function populateCpu(app: Application): Promise<Application> {
     const ns = 'namespace="' + app.metadata.namespace + '"';
     const query = 'query=sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{' + ns + ',container="' + app.metadata.name + '"})';
-    return consoleFetchJSON(PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns).then((res) => {
+    const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
+
+    return consoleFetchJSON(queryUrl).then((res) => {
         let newApp: Application = { ...app };
         if (res && res.data && res.data && res.data.result && res.data.result.length > 0 && res.data.result[0].value && res.data.result[0].value.length > 1) {
             newApp.cpu = sprintf('%.2f', res.data.result[0].value[1]);
@@ -123,11 +112,11 @@ async function populateCpu(app: Application): Promise<Application> {
 async function populateCpuMetrics(app: Application): Promise<Application> {
     const currentTimeInSeconds = Math.floor(Date.now() / 1000);
     const ns = 'namespace="' + app.metadata.namespace + '"';
-    // const query2 = `/api/prometheus/api/v1/query_range?query=avg_over_time(process_cpu_usage{service="${app.metadata.name}", namespace="${app.metadata.namespace}"}[1m]) * 100 / avg_over_time(system_cpu_usage[1m])&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
     const query = 'query=sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{' + ns + ',container="' + app.metadata.name + '"})';
     const timeRange = `&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
+    const queryUrl = PROMETHEUS_API_QUERYRANGE_PATH + '?' + query + '&' + ns + timeRange;
 
-    return consoleFetchJSON(PROMETHEUS_API_QUERYRANGE_PATH + '?' + query + '&' + ns + timeRange).then((res) => {
+    return consoleFetchJSON(queryUrl).then((res) => {
         let newApp: Application = { ...app };
 
         if (res && res.data && res.data.result && res.data.result.length > 0) {
@@ -149,7 +138,9 @@ async function populateCpuMetrics(app: Application): Promise<Application> {
 async function populateMem(app: Application): Promise<Application> {
     const ns = 'namespace="' + app.metadata.namespace + '"';
     const query = 'query=sum(container_memory_working_set_bytes{' + ns + ',container="' + app.metadata.name + '"}) / (1024 * 1024)';
-    return consoleFetchJSON(PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns).then((res) => {
+    const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
+
+    return consoleFetchJSON(queryUrl).then((res) => {
             let newApp: Application = { ...app };
             if (res && res.data && res.data && res.data.result && res.data.result.length > 0 && res.data.result[0].value && res.data.result[0].value.length > 1) {
                 newApp.memory = sprintf('%.2f MB', res.data.result[0].value[1]);
@@ -160,12 +151,12 @@ async function populateMem(app: Application): Promise<Application> {
 
 async function populateMemMetrics(app: Application): Promise<Application> {
     const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-    // const query2 = `/api/prometheus/api/v1/query_range?query=sum(jvm_memory_used_bytes{namespace="${app.metadata.namespace}", service="${app.metadata.name}"} / (1024 * 1024))&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
     const ns = 'namespace="' + app.metadata.namespace + '"';
     const query = 'query=sum(container_memory_working_set_bytes{' + ns + ',container="' + app.metadata.name + '"}) / (1024 * 1024)';
     const timeRange = `&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
+    const queryUrl = PROMETHEUS_API_QUERYRANGE_PATH + '?' + query + '&' + ns + timeRange;
 
-    return consoleFetchJSON(PROMETHEUS_API_QUERYRANGE_PATH + '?' + query + '&' + ns + timeRange).then((res) => {
+    return consoleFetchJSON(queryUrl).then((res) => {
         let newApp: Application = { ...app };
 
         if (res && res.data && res.data.result && res.data.result.length > 0) {
@@ -188,9 +179,12 @@ async function populateMemMetrics(app: Application): Promise<Application> {
 
 export async function populateGCPauseMetrics(app: Application): Promise<Application> {
     const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-    const query = `/api/prometheus/api/v1/query_range?query=avg_over_time(jvm_gc_pause_seconds_count{namespace="${app.metadata.namespace}", service="${app.metadata.name}"} / (1024 * 1024))&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
+    const ns = 'namespace="' + app.metadata.namespace + '"';
+    const query = 'query=sum(jvm_gc_pause_seconds_count{' + ns + ',container="' + app.metadata.name + '"}) / (1024 * 1024)';
+    const timeRange = `&start=${currentTimeInSeconds - 3600}&end=${currentTimeInSeconds}&step=60`;
+    const queryUrl = PROMETHEUS_API_QUERYRANGE_PATH + '?' + query + '&' + ns + timeRange
 
-    return consoleFetchJSON(query).then((res) => {
+    return consoleFetchJSON(queryUrl).then((res) => {
         let newApp: Application = { ...app };
 
         if (res && res.data && res.data.result && res.data.result.length > 0) {
@@ -318,25 +312,6 @@ export async function fetchApplicationWithMetrics(kind: string, ns: string, name
     return app.then(populateRoute).then(populateCpuMetrics).then(populateMemMetrics);
 }
 
-export async function deleteApplication(kind: string, ns: string, name: string): Promise<boolean> {
-    switch (kind) {
-        case 'Deployment':
-            return deleteDeployment(ns, name);
-        case 'DeploymentConfig':
-            return deleteDeploymentConfig(ns, name);
-        default:
-            throw new Error('Invalid kind: ' + kind);
-    }
-}
-
-export async function deleteApplicationPods(ns: string, name: string) {
-    fetchApplicationPods(ns, name).then((pods: PodKind[]) => {
-        pods.forEach((pod) => {
-            consoleFetchJSON.delete('/api/kubernetes/api/v1/namespaces/' + ns + '/pods/' + pod.metadata.name);
-        });
-    })
-}
-
 const CamelService = {
     fetchDeployments,
     fetchDeploymentConfigs,
@@ -354,10 +329,6 @@ const CamelService = {
     fetchPvc,
     fetchJob,
     fetchJobs,
-    deleteDeployment,
-    deleteDeploymentConfig,
-    deleteApplication,
-    deleteApplicationPods,
     populateAdddionalInfo
 }
 export default CamelService;

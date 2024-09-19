@@ -67,7 +67,7 @@ export const ApplicationPage: React.FC<ApplicationPageProps> = ( {match} ) => {
       </Helmet>
       <Page>
         <PageSection variant="light">
-          <Title headingLevel="h1">{t('Dashboard')}</Title>
+          <Title headingLevel="h1">{t('Dashboard')} - {selectedName}</Title>
         </PageSection>
         <PageSection variant="light">
           <Tabs activeKey={activeTabKey} onSelect={handleTabClick}>

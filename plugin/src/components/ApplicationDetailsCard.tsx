@@ -137,9 +137,12 @@ const ApplicationDetailsCard: React.FC<{ application: Application }> = ({ applic
                         <Card>
                             <CardTitle>Frameworks</CardTitle>
                             <CardBody>
-                                <TextContent><strong>Quarkus Platform: </strong> {application.metadata.annotations['camel/quarkus-platform']}</TextContent>
-                                <TextContent><strong>Camel Quarkus: </strong> {application.metadata.annotations['camel/camel-quarkus']}</TextContent>
-                                <TextContent><strong>Camel: </strong> {application.metadata.annotations['camel/camel-core-version']}</TextContent>
+                                {application.metadata.annotations['camel/camel-core-version'] && <TextContent><strong>Camel: </strong> {application.metadata.annotations['camel/camel-core-version']}</TextContent>}
+                                {application.metadata.annotations['camel/quarkus-platform'] && <TextContent><strong>Quarkus Platform: </strong> {application.metadata.annotations['camel/quarkus-platform']}</TextContent>}
+                                {application.metadata.annotations['camel/camel-quarkus'] && <TextContent><strong>Camel Quarkus: </strong> {application.metadata.annotations['camel/camel-quarkus']}</TextContent>}
+
+                                {application.metadata.annotations['camel/camel-spring-boot-version'] && <TextContent><strong>Camel Spring Boot: </strong> {application.metadata.annotations['camel/camel-spring-boot-version']}</TextContent>}
+                                {application.metadata.annotations['camel/spring-boot-version'] && <TextContent><strong>Spring Boot: </strong> {application.metadata.annotations['camel/spring-boot-version']}</TextContent>}
                             </CardBody>
                         </Card>
                     </div>

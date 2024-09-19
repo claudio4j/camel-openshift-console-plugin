@@ -244,10 +244,17 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                 </Td>
                 <Td dataLabel={columnNames.kind}>{app.kind}</Td>
                 <Td dataLabel={columnNames.namespace}>{app.metadata.namespace}</Td>
-                <Td dataLabel={columnNames.status}><Status title={`${app.status.availableReplicas} of ${app.status.replicas} pods`} status={app.status.availableReplicas === app.status.replicas ? "Succeeded" : "Failed"}/></Td>
+                <Td dataLabel={columnNames.status}>
+                    {(app.kind == 'Deployment' || app.kind == 'DeploymentConfig') &&
+                        <Status title={`${app.status.availableReplicas} of ${app.status.replicas} pods`} status={app.status.availableReplicas === app.status.replicas ? "Succeeded" : "Failed"}/>
+                    }
+                    {app.kind == 'CronJob'  &&
+                        <Status title={`${app.cronStatus.lastSuccessfulTime}`} status={app.cronStatus.lastSuccessfulTime ? "Succeeded" : "Failed"}/>
+                    }
+                </Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
-                <Td dataLabel={columnNames.runtime}>Quarkus Platform: {app.metadata.annotations['camel/quarkus-platform']}<br/>Camel: {app.metadata.annotations['camel/camel-core-version']}<br/>Camel Quarkus: {app.metadata.annotations['camel/camel-quarkus']}</Td>
+                <Td dataLabel={columnNames.runtime}>Camel: {app.metadata.annotations['camel/camel-core-version']}</Td>
               </Tr>
             ))}
           </Tbody>

@@ -54,7 +54,10 @@ const ApplicationDetailsCard: React.FC<{ application: Application }> = ({ applic
     }
 
     function getHealthStatus(application: Application): string | null {
-        return application.status.replicas === application.status.availableReplicas ? "Succeeded" : "Failed";
+        if (application.status) {
+            return application.status.replicas === application.status.availableReplicas ? "Succeeded" : "Failed";
+        }
+        return "Failed";
     }
 
     function checkMetricsEndpointStatus(application: Application) {

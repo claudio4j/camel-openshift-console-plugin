@@ -1,6 +1,6 @@
 import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
 import { ConfigMapKind, CronJobKind, DeploymentConfigKind, DeploymentKind, JobKind, PersistentVolumeClaimKind, PodKind, RouteKind, SecretKind } from '../k8s-types';
-import { Application, cronjobToApplication, deploymentConfigToApplication, deploymentToApplication } from '../types';
+import { Application, cronjobToApplication as cronJobToApplication, deploymentConfigToApplication, deploymentToApplication } from '../types';
 import { sprintf } from 'sprintf-js';
 import { camelApplicationStore } from '../state';
 
@@ -9,7 +9,6 @@ const PROMETHEUS_API_QUERY_PATH = '/api/prometheus/api/v1/query';
 const PROMETHEUS_API_QUERYRANGE_PATH = '/api/prometheus/api/v1/query_range';
 
 export async function fetchDeployments(ns: string): Promise<Application[]> {
-    debugger;
     let deploymentsUri = ns ? '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments' : '/api/kubernetes/apis/apps/v1/deployments';
     deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
     return consoleFetchJSON(deploymentsUri).then(res => {
@@ -18,13 +17,12 @@ export async function fetchDeployments(ns: string): Promise<Application[]> {
     });
 }
 
-export async function fetchCronjobs(ns: string): Promise<Application[]> {
-    debugger;
+export async function fetchCronJobs(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/batch/v1/namespaces/' + ns + '/cronjobs' : '/api/kubernetes/apis/batch/v1/cronjobs';
     deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
-            .map((c: CronJobKind) => cronjobToApplication(c));
+            .map((c: CronJobKind) => cronJobToApplication(c));
     });
 }
 
@@ -50,6 +48,12 @@ export async function fetchDeploymentConfigs(ns: string): Promise<Application[]>
 async function fetchDeploymentConfig(ns: string, name: string): Promise<Application> {
     return consoleFetchJSON('/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/' + name).then(res => {
         return deploymentConfigToApplication(res);
+    });
+}
+
+async function fetchCronJob(ns: string, name: string): Promise<Application> {
+    return consoleFetchJSON('/api/kubernetes/apis/batch/v1/namespaces/' + ns + '/cronjobs/' + name).then(res => {
+        return cronJobToApplication(res);
     });
 }
 
@@ -308,6 +312,9 @@ export async function fetchApplicationWithMetrics(kind: string, ns: string, name
         case 'DeploymentConfig':
             app = fetchDeploymentConfig(ns, name);
             break;
+        case 'CronJob':
+            app = fetchCronJob(ns, name);
+            break;
         default:
             throw new Error('Invalid kind: ' + kind);
     }
@@ -315,7 +322,8 @@ export async function fetchApplicationWithMetrics(kind: string, ns: string, name
 }
 
 const CamelService = {
-    fetchCronjobs,
+    fetchCronjobs: fetchCronJobs,
+    fetchCronJob,
     fetchDeployments,
     fetchDeploymentConfigs,
     fetchApplications,

@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { NamespaceBar } from '@openshift-console/dynamic-plugin-sdk';
 import ApplicationList from '../components/ApplicationList';
 import { Application } from '../types';
-import { fetchCronjobs, fetchDeployments, fetchDeploymentConfigs, populateAdddionalInfo } from '../services/CamelService';
+import { fetchCronJobs, fetchDeployments, fetchDeploymentConfigs, populateAdddionalInfo } from '../services/CamelService';
 import ApplicationsCPUGraph from '../components/ApplicationsCPUGraph';
 import ApplicationsMemoryGraph from '../components/ApplicationsMemoryGraph';
 
@@ -56,7 +56,7 @@ export const CamelPage: React.FC<CamelHomePageProps> = ({ match }) => {
             })
         });
 
-        fetchCronjobs(activeNamespace).then((apps: Application[]) => {
+        fetchCronJobs(activeNamespace).then((apps: Application[]) => {
             apps.forEach(app => {
                 setApplications((existing: Application[]) => {
                     return [...existing.filter(e => !matching(e, app)), app];
@@ -79,7 +79,7 @@ export const CamelPage: React.FC<CamelHomePageProps> = ({ match }) => {
 
             <Page>
                 <PageSection variant="light">
-                    <Title headingLevel="h1">{t('Camel Applications 123')}</Title>
+                    <Title headingLevel="h1">{t('Camel Applications')}</Title>
                 </PageSection>
                 <PageSection variant="light">
                     <Card>

@@ -1,5 +1,5 @@
 import { consoleFetchJSON } from '@openshift-console/dynamic-plugin-sdk';
-import { ConfigMapKind, CronJobKind, DeploymentConfigKind, DeploymentKind, JobKind, PersistentVolumeClaimKind, PodKind, RouteKind, SecretKind } from '../k8s-types';
+import { ConfigMapKind, CronJobKind, DeploymentConfigKind, DeploymentKind, JobKind, PersistentVolumeClaimKind, PodKind, SecretKind } from '../k8s-types';
 import { Application, cronjobToApplication as cronJobToApplication, deploymentConfigToApplication, deploymentToApplication } from '../types';
 import { sprintf } from 'sprintf-js';
 import { camelApplicationStore } from '../state';
@@ -11,6 +11,7 @@ const PROMETHEUS_API_QUERYRANGE_PATH = '/api/prometheus/api/v1/query_range';
 export async function fetchDeployments(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments' : '/api/kubernetes/apis/apps/v1/deployments';
     deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    console.log(">> fetchDeploymentSSS url: " + deploymentsUri);
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
             .map((d: DeploymentKind) => deploymentToApplication(d));
@@ -20,6 +21,7 @@ export async function fetchDeployments(ns: string): Promise<Application[]> {
 export async function fetchCronJobs(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/batch/v1/namespaces/' + ns + '/cronjobs' : '/api/kubernetes/apis/batch/v1/cronjobs';
     deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    console.log(">> fetchCronJobSSS url: " + deploymentsUri);
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
             .map((c: CronJobKind) => cronJobToApplication(c));
@@ -27,7 +29,9 @@ export async function fetchCronJobs(ns: string): Promise<Application[]> {
 }
 
 async function fetchDeployment(ns: string, name: string): Promise<Application> {
-    return consoleFetchJSON('/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name).then(res => {
+    const url = '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments/' + name
+    console.log(">> fetchDeployment url: " + url);
+    return consoleFetchJSON(url).then(res => {
         return deploymentToApplication(res);
     }).catch(_ => {
         return null;
@@ -37,6 +41,7 @@ async function fetchDeployment(ns: string, name: string): Promise<Application> {
 export async function fetchDeploymentConfigs(ns: string): Promise<Application[]> {
     let deploymentConfigUri = ns ? '/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs' : '/api/kubernetes/apis/apps.openshift.io/v1/deploymentconfigs';
     deploymentConfigUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    console.log(">> fetchDeploymentConfigSSS url: " + deploymentConfigUri);
     return consoleFetchJSON(deploymentConfigUri).then(res => {
         return res.items
             .map((d: DeploymentConfigKind) => deploymentConfigToApplication(d));
@@ -46,7 +51,9 @@ export async function fetchDeploymentConfigs(ns: string): Promise<Application[]>
 }
 
 async function fetchDeploymentConfig(ns: string, name: string): Promise<Application> {
-    return consoleFetchJSON('/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/' + name).then(res => {
+    const url = '/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs/' + name;
+    console.log(">> fetchDeploymentConfig url: " + url);
+    return consoleFetchJSON(url).then(res => {
         return deploymentConfigToApplication(res);
     });
 }
@@ -98,14 +105,15 @@ export async function fetchJob(ns: string, name: string): Promise<JobKind> {
 }
 
 export async function populateAdddionalInfo(app: Application): Promise<Application> {
-    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics).then(populateRoute);
+    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics);
 }
 
 async function populateCpu(app: Application): Promise<Application> {
     const ns = 'namespace="' + app.metadata.namespace + '"';
+    console.log('>> populateCpu ns: ' + ns);
     const query = 'query=sum(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{' + ns + ',container="' + app.metadata.name + '"})';
     const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
-
+    console.log(">> populateCpu url: " + queryUrl);
     return consoleFetchJSON(queryUrl).then((res) => {
         let newApp: Application = { ...app };
         if (res && res.data && res.data && res.data.result && res.data.result.length > 0 && res.data.result[0].value && res.data.result[0].value.length > 1) {
@@ -235,7 +243,7 @@ export async function populateGCOverheadMetrics(app: Application): Promise<Appli
     });
 }
 
-export async function populateRoute(app: Application): Promise<Application> {
+/* export async function populateRoute(app: Application): Promise<Application> {
     return consoleFetchJSON('/api/kubernetes/apis/route.openshift.io/v1/namespaces/' + app.metadata.namespace + '/routes/' + app.metadata.name).then((route: RouteKind) => {
         let newApp: Application = { ...app };
         const protocol = route.spec.tls ? 'https' : 'http';
@@ -245,7 +253,7 @@ export async function populateRoute(app: Application): Promise<Application> {
         return app;
     });
 }
-
+ */
 export async function fetchApplications(ns: string): Promise<Application[]> {
     return Promise.all([fetchDeployments(ns), fetchDeploymentConfigs(ns)]).then(([deployments, deploymentConfigs]) => {
         return deployments.concat(deploymentConfigs);
@@ -300,7 +308,7 @@ export async function fetchApplication(kind: string, ns: string, name: string): 
         default:
             throw new Error('Invalid kind: ' + kind);
     }
-    return app.then(populateRoute).then(populateCpuMetrics).then(populateMemMetrics);
+    return app.then(populateCpuMetrics).then(populateMemMetrics);
 }
 
 export async function fetchApplicationWithMetrics(kind: string, ns: string, name: string): Promise<Application> {
@@ -318,7 +326,7 @@ export async function fetchApplicationWithMetrics(kind: string, ns: string, name
         default:
             throw new Error('Invalid kind: ' + kind);
     }
-    return app.then(populateRoute).then(populateCpuMetrics).then(populateMemMetrics);
+    return app.then(populateCpuMetrics).then(populateMemMetrics);
 }
 
 const CamelService = {
@@ -334,7 +342,6 @@ const CamelService = {
     populateMemMetrics,
     populateGCOverheadMetrics,
     populateGCPauseMetrics,
-    populateRoute,
     fetchSecret,
     fetchConfigMap,
     fetchPvc,

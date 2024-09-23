@@ -52,17 +52,17 @@ plugin:
         requests:
           cpu: 10m
           memory: 50Mi
-serviceProxy:
-  alias: "service-proxy"
-  name: "service-proxy"
-  namespace: "plugin-camel-openshift-console-plugin"
-  envs:
-    JAVA_APP_JAR: /deployments/quarkus-run.jar
-  image: cmiranda/service-proxy:1.0.0-SNAPSHOT
-  openjdk17:
-    builderImage: registry.access.redhat.com/ubi8/openjdk-17
-  ports:
-    http: 8080
-    https: 8443
-  s2iJava:
-    builderImage: fabric8/s2i-java
+# serviceProxy:
+#   alias: "service-proxy"
+#   name: "service-proxy"
+#   namespace: "plugin-camel-openshift-console-plugin"
+#   envs:
+#     JAVA_APP_JAR: /deployments/quarkus-run.jar
+#   image: cmiranda/service-proxy:1.0.0-SNAPSHOT
+#   openjdk17:
+#     builderImage: registry.access.redhat.com/ubi8/openjdk-17
+#   ports:
+#     http: 8080
+#     https: 8443
+#   s2iJava:
+#     builderImage: fabric8/s2i-java

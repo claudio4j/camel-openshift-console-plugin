@@ -24,7 +24,7 @@ After running `oc login` (requires [oc](https://console.redhat.com/openshift/dow
 cd plugin
 yarn run start-console
 ```
-(requires [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io))
+(requires [podman 3.2.0+](https://podman.io) or [Docker](https://www.docker.com))
 
 
 This will run the OpenShift console in a container connected to the cluster
@@ -41,8 +41,8 @@ To deploy the console plugin to an actual [OpenShift](https://www.redhat.com/en/
 ### Building the images locally
 
 ```sh
-docker build -t quay.io/cmiranda/camel-openshift-console-plugin:latest .
-docker push quay.io/cmiranda/camel-openshift-console-plugin:latest
+podman build -t quay.io/cmiranda/camel-openshift-console-plugin:latest .
+podman push quay.io/cmiranda/camel-openshift-console-plugin:latest
 ```
 
 **Note**: The image `quay.io/cmiranda/camel-openshift-console-plguin:latest` is published so it can be pulled instead.
@@ -51,7 +51,7 @@ docker push quay.io/cmiranda/camel-openshift-console-plugin:latest
 
 ```sh
 oc new-project plugin-camel-openshift-console-plugin
-helm upgrade -i  camel-openshift-console-plugin charts/openshift-console-plugin --namespace plugin-camel-openshift-console-plugin --set plugin.image=quay.io/cmiranda/camel-openshift-console-plugin:latest
+helm upgrade -i camel-openshift-console-plugin charts/openshift-console-plugin --namespace plugin-camel-openshift-console-plugin --set plugin.image=quay.io/cmiranda/camel-openshift-console-plugin:latest
 ```
 
 # The Camel Tab

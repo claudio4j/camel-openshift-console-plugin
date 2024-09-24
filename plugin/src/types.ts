@@ -19,6 +19,7 @@ export type Application = {
   kind? : string;
   cpu?: string;
   memory?: string;
+  exchangesTotal?: string;
   url?: string;
   metrics?: Metrics;
   spec?: PodSpec;

@@ -143,7 +143,7 @@ const ApplicationLoggingCard: React.FC<{application: Application, active?: boole
                   </ToolbarToggleGroup>
                 </ToolbarContent>
               </Toolbar>
-              <Table>
+              <Table aria-label="Log Level">
                 <Thead>
                   <Tr>
                     <Th>Name</Th>

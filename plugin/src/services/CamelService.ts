@@ -105,7 +105,7 @@ export async function fetchJob(ns: string, name: string): Promise<JobKind> {
 }
 
 export async function populateAdddionalInfo(app: Application): Promise<Application> {
-    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics);
+    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics).then(populateExchangesTotal);
 }
 
 async function populateCpu(app: Application): Promise<Application> {
@@ -243,6 +243,20 @@ export async function populateGCOverheadMetrics(app: Application): Promise<Appli
     });
 }
 
+async function populateExchangesTotal(app: Application): Promise<Application> {
+    const ns = 'namespace="' + app.metadata.namespace + '"';
+    const query = 'query=avg(camel_exchanges_total{' + ns + ',service="' + app.metadata.name + '"})';
+    const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
+
+    return consoleFetchJSON(queryUrl).then((res) => {
+            let newApp: Application = { ...app };
+            if (res && res.data && res.data && res.data.result && res.data.result.length > 0 && res.data.result[0].value && res.data.result[0].value.length > 1) {
+                newApp.exchangesTotal = sprintf('%.0f', res.data.result[0].value[1]);
+            }
+            return newApp;
+        });
+}
+
 /* export async function populateRoute(app: Application): Promise<Application> {
     return consoleFetchJSON('/api/kubernetes/apis/route.openshift.io/v1/namespaces/' + app.metadata.namespace + '/routes/' + app.metadata.name).then((route: RouteKind) => {
         let newApp: Application = { ...app };
@@ -312,6 +326,7 @@ export async function fetchApplication(kind: string, ns: string, name: string): 
 }
 
 export async function fetchApplicationWithMetrics(kind: string, ns: string, name: string): Promise<Application> {
+    console.log("> fetchApplicationWithMetrics ns: " + ns + ", name: " + name);
     let app: Promise<Application>;
     switch (kind) {
         case 'Deployment':

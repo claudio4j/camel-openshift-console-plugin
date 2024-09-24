@@ -18,6 +18,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
     namespace: 'Namespace',
     status: 'Status',
     runtime: 'Runtime',
+    exchangesTotal: 'Exchanges',
     cpu: 'CPU',
     memory: 'Memory',
   };
@@ -213,6 +214,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                   <span className="sort-icon">{sortDirection === "asc" ? "▲" : "▼"}</span>
                 )}
               </Th>
+              <Th>{columnNames.exchangesTotal}</Th>
               <Th
                 onClick={() => toggleSort("cpu")}
                 className={sortColumn === "cpu" ? `sorted ${sortDirection}` : ""}
@@ -252,6 +254,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                         <Status title={`${app.cronStatus.lastSuccessfulTime}`} status={app.cronStatus.lastSuccessfulTime ? "Succeeded" : "Failed"}/>
                     }
                 </Td>
+                <Td dataLabel={columnNames.exchangesTotal}>{app.exchangesTotal}</Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
                 <Td dataLabel={columnNames.runtime}>Camel: {app.metadata.annotations['camel/camel-core-version']}</Td>

@@ -105,7 +105,7 @@ export async function fetchJob(ns: string, name: string): Promise<JobKind> {
 }
 
 export async function populateAdddionalInfo(app: Application): Promise<Application> {
-    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics).then(populateExchangesTotal);
+    return populateCpu(app).then(populateCpuMetrics).then(populateMem).then(populateMemMetrics).then(populateCamelExchangesTotal).then(populateCamelRouteExchanges);
 }
 
 async function populateCpu(app: Application): Promise<Application> {
@@ -243,9 +243,25 @@ export async function populateGCOverheadMetrics(app: Application): Promise<Appli
     });
 }
 
-async function populateExchangesTotal(app: Application): Promise<Application> {
+// metrics generated from camel-micrometer
+async function populateCamelExchangesTotal(app: Application): Promise<Application> {
     const ns = 'namespace="' + app.metadata.namespace + '"';
-    const query = 'query=avg(camel_exchanges_total{' + ns + ',service="' + app.metadata.name + '"})';
+    const query = 'query=sum(camel_exchanges_total{' + ns + ',service="' + app.metadata.name + '"})';
+    const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
+
+    return consoleFetchJSON(queryUrl).then((res) => {
+            let newApp: Application = { ...app };
+            if (res && res.data && res.data && res.data.result && res.data.result.length > 0 && res.data.result[0].value && res.data.result[0].value.length > 1) {
+                newApp.exchangesTotal = sprintf('%.0f', res.data.result[0].value[1]);
+            }
+            return newApp;
+        });
+}
+
+// metrics generated from the opentelemetry-jmx instrumentation
+async function populateCamelRouteExchanges(app: Application): Promise<Application> {
+    const ns = 'namespace="' + app.metadata.namespace + '"';
+    const query = 'query=sum(camel_route_exchange{k8s_namespace_name="' + app.metadata.namespace + '",k8s_deployment_name="' + app.metadata.name + '"})';
     const queryUrl = PROMETHEUS_API_QUERY_PATH + '?' + query + '&' + ns;
 
     return consoleFetchJSON(queryUrl).then((res) => {

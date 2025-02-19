@@ -257,7 +257,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                 <Td dataLabel={columnNames.exchangesTotal}>{app.exchangesTotal}</Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
-                <Td dataLabel={columnNames.runtime}>Camel: {app.metadata.annotations['camel/camel-core-version']}</Td>
+                <Td dataLabel={columnNames.runtime}>Camel: {app.metadata.annotations?.['camel/camel-core-version']}</Td>
               </Tr>
             ))}
           </Tbody>

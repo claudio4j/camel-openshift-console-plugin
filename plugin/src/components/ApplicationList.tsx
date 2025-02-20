@@ -6,6 +6,7 @@ import { Application } from "../types";
 import Status from "@openshift-console/dynamic-plugin-sdk/lib/app/components/status/Status";
 import { Button, Select, SelectOption, Spinner, TextInputGroup, TextInputGroupMain, TextInputGroupUtilities, Toolbar, ToolbarContent, ToolbarGroup, ToolbarItem, ToolbarToggleGroup } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon, TimesIcon } from "@patternfly/react-icons";
+import { METADATA_ANNOTATION_CAMEL_VERSION } from "../const";
 
 interface ApplicationListProps {
   apps: Application[];
@@ -17,7 +18,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
     kind: 'Kind',
     namespace: 'Namespace',
     status: 'Status',
-    runtime: 'Runtime',
+    camel: 'Camel',
     exchangesTotal: 'Exchanges',
     cpu: 'CPU',
     memory: 'Memory',
@@ -233,7 +234,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                   <span className="sort-icon">{sortDirection === "asc" ? "▲" : "▼"}</span>
                 )}
               </Th>
-              <Th>{columnNames.runtime}</Th>
+              <Th>{columnNames.camel}</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -257,7 +258,7 @@ export const ApplicationList: React.FC<ApplicationListProps> = ({ apps }) => {
                 <Td dataLabel={columnNames.exchangesTotal}>{app.exchangesTotal}</Td>
                 <Td dataLabel={columnNames.cpu}>{app.cpu}</Td>
                 <Td dataLabel={columnNames.memory}>{app.memory}</Td>
-                <Td dataLabel={columnNames.runtime}>Camel: {app.metadata.annotations?.['camel/camel-core-version']}</Td>
+                <Td dataLabel={columnNames.camel}>{app.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_VERSION]}</Td>
               </Tr>
             ))}
           </Tbody>

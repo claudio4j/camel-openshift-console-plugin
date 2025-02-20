@@ -3,14 +3,14 @@ import { ConfigMapKind, CronJobKind, DeploymentConfigKind, DeploymentKind, JobKi
 import { Application, cronjobToApplication as cronJobToApplication, deploymentConfigToApplication, deploymentToApplication } from '../types';
 import { sprintf } from 'sprintf-js';
 import { camelApplicationStore } from '../state';
+import { METADATA_LABEL_SELECTOR_CAMEL_APP } from '../const';
 
-const OPENSHIFT_RUNTIME_LABEL = 'camel/integration-runtime=camel';
 const PROMETHEUS_API_QUERY_PATH = '/api/prometheus/api/v1/query';
 const PROMETHEUS_API_QUERYRANGE_PATH = '/api/prometheus/api/v1/query_range';
 
 export async function fetchDeployments(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/apps/v1/namespaces/' + ns + '/deployments' : '/api/kubernetes/apis/apps/v1/deployments';
-    deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    deploymentsUri += '?labelSelector=' + METADATA_LABEL_SELECTOR_CAMEL_APP
     console.log(">> fetchDeploymentSSS url: " + deploymentsUri);
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
@@ -20,7 +20,7 @@ export async function fetchDeployments(ns: string): Promise<Application[]> {
 
 export async function fetchCronJobs(ns: string): Promise<Application[]> {
     let deploymentsUri = ns ? '/api/kubernetes/apis/batch/v1/namespaces/' + ns + '/cronjobs' : '/api/kubernetes/apis/batch/v1/cronjobs';
-    deploymentsUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    deploymentsUri += '?labelSelector=' + METADATA_LABEL_SELECTOR_CAMEL_APP
     console.log(">> fetchCronJobSSS url: " + deploymentsUri);
     return consoleFetchJSON(deploymentsUri).then(res => {
         return res.items
@@ -40,7 +40,7 @@ async function fetchDeployment(ns: string, name: string): Promise<Application> {
 
 export async function fetchDeploymentConfigs(ns: string): Promise<Application[]> {
     let deploymentConfigUri = ns ? '/api/kubernetes/apis/apps.openshift.io/v1/namespaces/' + ns + '/deploymentconfigs' : '/api/kubernetes/apis/apps.openshift.io/v1/deploymentconfigs';
-    deploymentConfigUri += '?labelSelector=' + OPENSHIFT_RUNTIME_LABEL
+    deploymentConfigUri += '?labelSelector=' + METADATA_LABEL_SELECTOR_CAMEL_APP
     console.log(">> fetchDeploymentConfigSSS url: " + deploymentConfigUri);
     return consoleFetchJSON(deploymentConfigUri).then(res => {
         return res.items

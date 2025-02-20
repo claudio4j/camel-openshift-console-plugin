@@ -11,6 +11,15 @@ import {
 import { Application } from '../types';
 import Status from '@openshift-console/dynamic-plugin-sdk/lib/app/components/status/Status';
 import { consoleFetch, consoleFetchJSON, ResourceLink } from '@openshift-console/dynamic-plugin-sdk';
+import { 
+    METADATA_ANNOTATION_APP_VERSION, 
+    METADATA_ANNOTATION_CAMEL_CEQ_VERSION, 
+    METADATA_ANNOTATION_CAMEL_CSB_VERSION, 
+    METADATA_ANNOTATION_CAMEL_QUARKUS_PLATFORM_VERSION, 
+    METADATA_ANNOTATION_CAMEL_SPRINGBOOT_VERSION, 
+    METADATA_ANNOTATION_CAMEL_VERSION,
+    METADATA_ANNOTATION_QUARKUS_BUILD_TIMESTAMP, 
+} from '../const';
 
 const ApplicationDetailsCard: React.FC<{ application: Application }> = ({ application }) => {
 
@@ -41,14 +50,14 @@ const ApplicationDetailsCard: React.FC<{ application: Application }> = ({ applic
 
     function getBuildTimestamp(application: Application): string | null {
         if (application && application.metadata) {
-            return application.metadata.annotations?.["app.quarkus.io/build-timestamp"];
+            return application.metadata.annotations?.[METADATA_ANNOTATION_QUARKUS_BUILD_TIMESTAMP];
         }
         return null;
     }
 
     function getApplicationVersion(application: Application): string | null {
         if (application && application.metadata) {
-            return application.metadata.annotations?.["app.kubernetes.io/version"];
+            return application.metadata.annotations?.[METADATA_ANNOTATION_APP_VERSION];
         }
         return null;
     }
@@ -140,12 +149,12 @@ const ApplicationDetailsCard: React.FC<{ application: Application }> = ({ applic
                         <Card>
                             <CardTitle>Frameworks</CardTitle>
                             <CardBody>
-                                {application.metadata.annotations?.['camel/camel-core-version'] && <TextContent><strong>Camel: </strong> {application.metadata.annotations['camel/camel-core-version']}</TextContent>}
-                                {application.metadata.annotations?.['camel/quarkus-platform'] && <TextContent><strong>Quarkus Platform: </strong> {application.metadata.annotations['camel/quarkus-platform']}</TextContent>}
-                                {application.metadata.annotations?.['camel/camel-quarkus'] && <TextContent><strong>Camel Quarkus: </strong> {application.metadata.annotations['camel/camel-quarkus']}</TextContent>}
+                                {application.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_VERSION] && <TextContent><strong>Camel: </strong> {application.metadata.annotations[METADATA_ANNOTATION_CAMEL_VERSION]}</TextContent>}
+                                {application.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_QUARKUS_PLATFORM_VERSION] && <TextContent><strong>Quarkus Platform: </strong> {application.metadata.annotations[METADATA_ANNOTATION_CAMEL_QUARKUS_PLATFORM_VERSION]}</TextContent>}
+                                {application.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_CEQ_VERSION] && <TextContent><strong>Camel Quarkus: </strong> {application.metadata.annotations[METADATA_ANNOTATION_CAMEL_CEQ_VERSION]}</TextContent>}
 
-                                {application.metadata.annotations?.['camel/camel-spring-boot-version'] && <TextContent><strong>Camel Spring Boot: </strong> {application.metadata.annotations['camel/camel-spring-boot-version']}</TextContent>}
-                                {application.metadata.annotations?.['camel/spring-boot-version'] && <TextContent><strong>Spring Boot: </strong> {application.metadata.annotations['camel/spring-boot-version']}</TextContent>}
+                                {application.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_CSB_VERSION] && <TextContent><strong>Camel Spring Boot: </strong> {application.metadata.annotations[METADATA_ANNOTATION_CAMEL_CSB_VERSION]}</TextContent>}
+                                {application.metadata.annotations?.[METADATA_ANNOTATION_CAMEL_SPRINGBOOT_VERSION] && <TextContent><strong>Spring Boot: </strong> {application.metadata.annotations[METADATA_ANNOTATION_CAMEL_SPRINGBOOT_VERSION]}</TextContent>}
                             </CardBody>
                         </Card>
                     </div>

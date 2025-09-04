@@ -57,7 +57,7 @@ helm upgrade -i camel-openshift-console-plugin charts/openshift-console-plugin -
 # The Camel Tab
 
 In the developer perpective the Camel section is now shown:
-[![The Camel Plugin Home](screenshots/home.png)](screenshots/home.png)
+[![The Camel Plugin Home](screenshots/screenshot.png)](screenshots/screenshot.png)
 
 
 # Development notes
